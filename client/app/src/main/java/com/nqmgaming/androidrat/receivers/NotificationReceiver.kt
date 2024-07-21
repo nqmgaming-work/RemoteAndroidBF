@@ -21,6 +21,10 @@ class NotificationReceiver : BroadcastReceiver() {
                 val packageName = it.getStringExtra("package_name")
                 val notificationContent = it.getStringExtra("notification_content")
                 val notificationTitle = it.getStringExtra("notification_title")
+                val notificationId = it.getIntExtra("notification_id", 0)
+                val notificationTag = it.getStringExtra("notification_tag")
+                val notificationKey = it.getStringExtra("notification_key")
+                val notificationGroupKey = it.getStringExtra("notification_group_key")
                 val formData = mutableMapOf<String, String>()
 
                 formData["packageName"] = packageName ?: ""
@@ -30,7 +34,11 @@ class NotificationReceiver : BroadcastReceiver() {
                 val notificationDto = NotificationDto(
                     packageName = packageName ?: "",
                     notificationContent = notificationContent ?: "",
-                    notificationTitle = notificationTitle ?: ""
+                    notificationTitle = notificationTitle ?: "",
+                    id = notificationId.toString(),
+                    tag = notificationTag ?: "",
+                    key = notificationKey ?: "",
+                    groupKey = notificationGroupKey ?: ""
                 )
 
                 println("Notification received: $notificationDto")

