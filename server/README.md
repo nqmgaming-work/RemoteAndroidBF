@@ -21,3 +21,18 @@ This backend server is designed to handle device registration, command sending, 
 1. Clone the repository:
    ```bash
    git clone <repository-url>
+    cd <repository-name>
+    ```
+2. Install the dependencies:
+3. ```bash
+   npm install
+   ```
+4. Start the server:
+   ```bash
+    npm start
+    ```
+5. The server should now be running on `http://localhost:5525`.
+6. You can test the server by registering a device using the following command:
+   ```bash
+    curl -X POST http://localhost:5525/devices -d '{"name": "device1"}' -H 'Content-Type: application/json'
+    ```
