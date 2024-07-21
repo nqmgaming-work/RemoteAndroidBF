@@ -4,6 +4,7 @@ const WebSocket = require('ws');
 const http = require('http');
 const readline = require('readline');
 const bodyParser = require('body-parser');
+const {log} = require("debug");
 const app = express();
 const port = 5525;
 
@@ -11,7 +12,7 @@ const port = 5525;
 const server = http.createServer(app);
 
 // Attach WebSocket server to the HTTP server.
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({server});
 
 // Use morgan middleware for logging HTTP requests.
 // app.use(morgan('dev'));
@@ -25,7 +26,12 @@ let devices = [];
 app.post('/register', (req, res) => {
     const deviceInfo = req.body;
     devices.push(deviceInfo); // Thêm thiết bị vào danh sách
-    res.send({ message: 'Device registered successfully', deviceId: deviceInfo.id });
+    res.send({message: 'Device registered successfully', deviceId: deviceInfo.id});
+});
+
+app.post('/notification', (req, res) => {
+   console.dir(req.body);
+   res.send({message: 'Notification received successfully'});
 });
 
 // Handle WebSocket connections.

