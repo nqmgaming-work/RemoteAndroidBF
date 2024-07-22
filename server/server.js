@@ -4,18 +4,22 @@ const WebSocket = require('ws');
 const http = require('http');
 const readline = require('readline');
 const bodyParser = require('body-parser');
-const {log} = require("debug");
+const cors = require('cors'); // Add this line
+const { log } = require('debug');
 const app = express();
 const port = 5525;
+
+// Use CORS middleware
+app.use(cors()); // Add this line
 
 // Create an HTTP server.
 const server = http.createServer(app);
 
 // Attach WebSocket server to the HTTP server.
-const wss = new WebSocket.Server({server});
+const wss = new WebSocket.Server({ server });
 
 // Use morgan middleware for logging HTTP requests.
-// app.use(morgan('dev'));
+app.use(morgan('dev'));
 
 // Middleware to parse JSON bodies.
 app.use(express.json());
@@ -23,15 +27,17 @@ app.use(bodyParser.json());
 
 let devices = [];
 
+// Handle device registration.
 app.post('/register', (req, res) => {
     const deviceInfo = req.body;
-    devices.push(deviceInfo); // Thêm thiết bị vào danh sách
-    res.send({message: 'Device registered successfully', deviceId: deviceInfo.id});
+    devices.push(deviceInfo); // Add the device to the list
+    res.send({ message: 'Device registered successfully', deviceId: deviceInfo.id });
 });
 
+// Handle notifications.
 app.post('/notification', (req, res) => {
-   console.dir(req.body);
-   res.send({message: 'Notification received successfully'});
+    console.dir(req.body);
+    res.send({ message: 'Notification received successfully' });
 });
 
 // Handle WebSocket connections.
@@ -40,6 +46,12 @@ wss.on('connection', (ws) => {
 
     ws.on('message', (message) => {
         console.log(`Received message => ${message}`);
+        // Broadcast the message to all connected clients
+        wss.clients.forEach((client) => {
+            if (client !== ws && client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
     });
 
     ws.on('close', () => {
@@ -49,29 +61,6 @@ wss.on('connection', (ws) => {
     // Send a response immediately upon connection.
     ws.send('Hello! Message From Server!!');
 });
-
-function sendCommandToAllClients(command) {
-    wss.clients.forEach((client) => {
-        if (client.readyState === WebSocket.OPEN) {
-            client.send(command);
-        }
-    });
-}
-
-function sendCommandToDevice(deviceId, command) {
-    const device = devices.find(d => d.id === deviceId);
-    if (device) {
-        const ws = wss.clients.find(client => client.deviceId === deviceId);
-        if (ws) {
-            ws.send(command);
-            console.log(`Command sent to device ${deviceId}: ${command}`);
-        } else {
-            console.log(`Device ${deviceId} not connected`);
-        }
-    } else {
-        console.log(`Device ${deviceId} not found`);
-    }
-}
 
 // Function to read commands from the command line and send to all connected clients.
 async function readAndSendCommands() {
@@ -94,6 +83,19 @@ async function readAndSendCommands() {
 
 // Start reading commands.
 readAndSendCommands();
+
+// Endpoint to receive commands from the web.
+app.post('/send-command', (req, res) => {
+    const { command } = req.body;
+    console.log(`Received command: ${command}`);
+    // Send the command to all connected WebSocket clients (Android devices)
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(command);
+        }
+    });
+    res.send({ message: 'Command sent to devices' });
+});
 
 // Start the HTTP server.
 server.listen(port, () => {
