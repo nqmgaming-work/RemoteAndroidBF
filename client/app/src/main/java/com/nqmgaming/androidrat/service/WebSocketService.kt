@@ -64,7 +64,7 @@ class WebSocketService : Service() {
     }
 
     private fun connectWebSocket() {
-        val request = Request.Builder().url("ws://192.168.0.199:5525").build()
+        val request = Request.Builder().url("ws://192.168.29.172:5525").build()
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
 
             override fun onOpen(webSocket: WebSocket, response: Response) {
