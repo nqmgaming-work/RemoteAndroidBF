@@ -5,9 +5,23 @@ const http = require('http');
 const readline = require('readline');
 const bodyParser = require('body-parser');
 const cors = require('cors'); // Add this line
-const { log } = require('debug');
+const {log} = require('debug');
 const app = express();
 const port = 5525;
+const mongoose = require('mongoose');
+
+const devicesRouter = require('./src/route/device.route');
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/device',
+    {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+    }).then(r => {
+    console.log('Connected to MongoDB');
+});
+
+
 
 // Use CORS middleware
 app.use(cors()); // Add this line
@@ -16,7 +30,7 @@ app.use(cors()); // Add this line
 const server = http.createServer(app);
 
 // Attach WebSocket server to the HTTP server.
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocket.Server({server});
 
 // Use morgan middleware for logging HTTP requests.
 app.use(morgan('dev'));
@@ -25,20 +39,9 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(bodyParser.json());
 
-let devices = [];
 
-// Handle device registration.
-app.post('/register', (req, res) => {
-    const deviceInfo = req.body;
-    devices.push(deviceInfo); // Add the device to the list
-    res.send({ message: 'Device registered successfully', deviceId: deviceInfo.id });
-});
-
-// Handle notifications.
-app.post('/notification', (req, res) => {
-    console.dir(req.body);
-    res.send({ message: 'Notification received successfully' });
-});
+// Routes
+app.use('/api/devices', devicesRouter);
 
 // Handle WebSocket connections.
 wss.on('connection', (ws) => {
@@ -86,7 +89,7 @@ readAndSendCommands();
 
 // Endpoint to receive commands from the web.
 app.post('/send-command', (req, res) => {
-    const { command } = req.body;
+    const {command} = req.body;
     console.log(`Received command: ${command}`);
     // Send the command to all connected WebSocket clients (Android devices)
     wss.clients.forEach((client) => {
@@ -94,7 +97,7 @@ app.post('/send-command', (req, res) => {
             client.send(command);
         }
     });
-    res.send({ message: 'Command sent to devices' });
+    res.send({message: 'Command sent to devices'});
 });
 
 // Start the HTTP server.

