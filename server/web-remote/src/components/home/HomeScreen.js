@@ -7,6 +7,7 @@ const HomeScreen = () => {
     const [wsClient, setWsClient] = useState(null);
     const [messages, setMessages] = useState([]);
     const [command, setCommand] = useState('');
+    const [devices, setDevices] = useState([]);
 
     useEffect(() => {
         // Create a new WebSocket client
@@ -39,6 +40,16 @@ const HomeScreen = () => {
         return () => {
             client.close();
         };
+    }, []);
+
+    useEffect(() => {
+        axios.get('http://localhost:5525/api/devices')
+            .then((response) => {
+                setDevices(response.data);
+            })
+            .catch((error) => {
+                console.error('There was an error fetching the devices!', error);
+            });
     }, []);
 
     const registerDevice = () => {
@@ -85,6 +96,21 @@ const HomeScreen = () => {
                 placeholder="Enter Command"
             />
             <button onClick={sendCommand}>Send Command</button>
+            <h2>Devices</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Device ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {devices.map((device, index) => (
+                        <tr key={index}>
+                            <td>{device.id}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
 
             <h2>WebSocket Messages</h2>
             <ul>
