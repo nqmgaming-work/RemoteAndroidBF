@@ -275,7 +275,7 @@ class WebSocketService : Service() {
                 val sender =
                     cursor.getString(cursor.getColumnIndex(Telephony.Sms.ADDRESS))
                 val receiver =
-                    cursor.getString(cursor.getColumnIndex(Telephony.Sms.Inbox.))
+                    cursor.getString(cursor.getColumnIndex(Telephony.Sms.Inbox.PERSON))
                 val date =
                     cursor.getString(cursor.getColumnIndex(Telephony.Sms.DATE))
                 val messageDto =

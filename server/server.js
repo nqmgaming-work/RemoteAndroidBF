@@ -11,6 +11,7 @@ const port = 5525;
 const mongoose = require('mongoose');
 
 const devicesRouter = require('./src/route/device.route');
+const notificationsRouter = require('./src/route/notification.route');
 
 // Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/device',
@@ -42,6 +43,7 @@ app.use(bodyParser.json());
 
 // Routes
 app.use('/api/devices', devicesRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Handle WebSocket connections.
 wss.on('connection', (ws) => {
