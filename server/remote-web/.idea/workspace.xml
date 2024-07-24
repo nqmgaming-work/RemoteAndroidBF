@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8f6cddc6-f6b0-4959-a8c0-c251683b71d8" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../../client/.idea/kelp/pluginIsPresent" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/package-lock.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/package.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/public/favicon.ico" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/public/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/public/logo192.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/public/logo512.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/public/manifest.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/public/robots.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/App.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/App.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/App.test.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/AuthProvider.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/components/ProtectedRoute.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/components/home/HomeScreen.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/components/login/LoginScreen.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/components/login/LoginScreen.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/index.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/index.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/logo.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/reportWebVitals.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../web-remote/src/setupTests.js" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 5
+}]]></component>
+  <component name="ProjectId" id="2jgc3UKd0UXdAfUiVPEcTQYX8xV" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "/Users/nqmgaming/Workspaces/AndroidRat/server/remote-web",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "npm.android.executor": "Run",
+    "ts.external.directory.path": "/Applications/WebStorm.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RunManager">
+    <configuration name="android" type="js.build_tools.npm" temporary="true" nameIsGenerated="true">
+      <package-json value="$PROJECT_DIR$/package.json" />
+      <command value="run" />
+      <scripts>
+        <script value="android" />
+      </scripts>
+      <node-interpreter value="project" />
+      <envs />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="npm.android" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-410509235cf1-JavaScript-WS-242.20224.96" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8f6cddc6-f6b0-4959-a8c0-c251683b71d8" name="Changes" comment="" />
+      <created>1721811962364</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1721811962364</updated>
+      <workItem from="1721811963424" duration="983000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
