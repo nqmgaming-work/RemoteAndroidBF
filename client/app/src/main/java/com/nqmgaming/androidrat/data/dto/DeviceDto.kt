@@ -25,10 +25,8 @@ data class DeviceDto(
     var fingerprint: String? = null,
     @SerializedName("host")
     var host: String? = null,
-    @SerializedName("_id")
-    var id: String? = null,
-    @SerializedName("id")
-    var idApp: String? = null,
+    @SerializedName("deviceId")
+    var deviceId: String? = null,
     @SerializedName("tags")
     var tags: String? = null,
     @SerializedName("type")

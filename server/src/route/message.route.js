@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Message = require('../model/message.model');
-
+const WebSocket = require('ws');
 // Create a new message
 router.post('/send', async (req, res) => {
     try {

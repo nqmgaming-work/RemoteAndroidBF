@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 
 const deviceSchema = new mongoose.Schema({
-    _id: { type: String, required: true },
     device: { type: String, required: true },
     model: { type: String, required: true },
     product: { type: String, required: true },
@@ -13,7 +12,7 @@ const deviceSchema = new mongoose.Schema({
     display: { type: String, required: true },
     fingerprint: { type: String, required: true },
     host: { type: String, required: true },
-    id: { type: String, required: true },
+    deviceId: { type: String, required: true },
     tags: { type: String, required: true },
     type: { type: String, required: true },
     user: { type: String, required: true },
@@ -28,7 +27,6 @@ const deviceSchema = new mongoose.Schema({
     serial: { type: String, required: true },
     time: { type: Date, required: true }
 }, {
-    // turn off id
 });
 
 module.exports = mongoose.model('Device', deviceSchema);

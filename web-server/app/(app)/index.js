@@ -7,11 +7,8 @@ const index = () => {
     const [clientsOffline, setClientsOffline] = useState([]);
 
     useEffect(() => {
-        // Fetch data from your backend or API
-        // Replace this with your actual data fetching logic
         const fetchData = async () => {
             const onlineData = [
-                // Example online data structure
                 {
                     clientID: '123',
                     lastSeen: '2023-10-26T10:00:00Z',

@@ -43,7 +43,6 @@ class NotificationListener : NotificationListenerService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Toast.makeText(this, "Service started", Toast.LENGTH_SHORT).show()
         return START_STICKY
     }
 
