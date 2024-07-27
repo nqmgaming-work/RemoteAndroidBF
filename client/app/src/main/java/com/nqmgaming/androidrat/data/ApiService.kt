@@ -15,4 +15,7 @@ interface ApiService {
 
     @POST("notifications")
     fun postNotification(@Body notificationData: NotificationDto): Call<ResponseBody>
+
+    @POST("phones")
+    fun postPhone(@Body phoneDto: List<PhoneDto>): Call<ResponseBody>
 }

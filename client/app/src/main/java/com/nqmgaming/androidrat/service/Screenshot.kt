@@ -14,7 +14,6 @@ import android.media.projection.MediaProjectionManager
 import android.os.Environment
 import android.os.IBinder
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.WindowManager
 import java.io.File
 import java.io.FileOutputStream
